@@ -3,125 +3,98 @@
 namespace App\Entity;
 
 use App\Repository\BookRepository;
-use App\Entity\BookAuthor;
 use Doctrine\ORM\Mapping as ORM;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\Common\Collections\ArrayCollection;
 
 #[ORM\Entity(repositoryClass: BookRepository::class)]
 #[ORM\Table(name: "book")]
+#[ORM\HasLifecycleCallbacks]
 class Book
 {
-    private Collection $bookAuthors;
-
-    public function __construct()
-    {
-        $this->bookAuthors = new ArrayCollection();
-    }
-
-    /**
-     * @return Collection
-     */
-    public function getBookAuthors(): Collection
-    {
-        return $this->bookAuthors;
-    }
-
-    public function addBookAuthor(BookAuthor $bookAuthor): self
-    {
-        if (!$this->bookAuthors->contains($bookAuthor)) {
-            $this->bookAuthors[] = $bookAuthor;
-            $bookAuthor->setBook($this);
-        }
-
-        return $this;
-    }
-
-    public function removeBookAuthor(BookAuthor $bookAuthor): self
-    {
-        if ($this->bookAuthors->removeElement($bookAuthor)) {
-            // set the owning side to null (unless already changed)
-            if ($bookAuthor->getBook() === $this) {
-                $bookAuthor->setBook(null);
-            }
-        }
-
-        return $this;
-    }
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
-    private ?int $id = null;
+    private int $id;
 
-    #[ORM\Column(length: 255, nullable: true)]
+    #[ORM\Column(type: "string")]
     private ?string $title = null;
 
-    #[ORM\Column]
-    private ?int $year = null;
+    #[ORM\Column(type: "integer")]
+    private int $year;
 
-    #[ORM\Column(length: 255)]
+    #[ORM\ManyToOne(targetEntity: Publisher::class, inversedBy: "books")]
     private ?Publisher $publisher = null;
 
-    #[ORM\ManyToOne(targetEntity: Publisher::class, inversedBy: 'books')]
-    private ?string $authors = null;
+    #[ORM\ManyToMany(targetEntity: Author::class, inversedBy: "books")]
+    private Collection $authors;
 
-    public function getId(): ?int
-    {
+    public function __construct() {
+        $this->authors = new ArrayCollection();
+    }
+
+    public function getId(): int {
         return $this->id;
     }
 
-    public function setId(string $id): static
-    {
+    public function setId(int $id) {
         $this->id = $id;
-
-        return $this;
     }
 
-    public function getTitle(): ?string
-    {
+    public function getTitle(): string {
         return $this->title;
     }
 
-    public function setTitle(?string $title): static
-    {
+    public function setTitle(string $title): self {
         $this->title = $title;
-
         return $this;
     }
 
-    public function getYear(): ?int
-    {
+    public function getYear(): int {
         return $this->year;
     }
 
-    public function setYear(int $year): static
-    {
+    public function setYear(int $year): self {
         $this->year = $year;
-
         return $this;
     }
 
-    public function getPublisher(): Publisher
-    {
+    /**
+     * @return Publisher|null
+     */
+    public function getPublisher(): ?Publisher {
         return $this->publisher;
     }
 
-    public function setPublisher(?Publisher $publisher): self
-    {
+    /**
+     * @param mixed $publisher
+     */
+    public function setPublisher(?Publisher $publisher): self {
         $this->publisher = $publisher;
-
         return $this;
     }
 
-    public function getAuthors(): ?string
-    {
+    /**
+     * @return Collection<Author>
+     */
+    public function getAuthors(): Collection {
         return $this->authors;
     }
 
-    public function setAuthors(string $authors): static
-    {
-        $this->authors = $authors;
+    public function addAuthor(Author $author): void {
+        $this->authors->add($author);
+    }
 
-        return $this;
+    public function removeAuthor(Author $author): void {
+        $this->authors->removeElement($author);
+    }
+
+    #[ORM\PreRemove]
+    public function preRemove(): void {
+        /** @var Author $author */
+        foreach ($this->authors as $author) {
+            $author->removeBook($this);
+        }
+        $this->authors->clear();
     }
 }

@@ -3,111 +3,92 @@
 namespace App\Entity;
 
 use App\Repository\AuthorRepository;
-use App\Entity\BookAuthor;
 use Doctrine\ORM\Mapping as ORM;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\Common\Collections\ArrayCollection;
 
 #[ORM\Entity(repositoryClass: AuthorRepository::class)]
 #[ORM\Table(name: 'author')]
+#[ORM\HasLifecycleCallbacks]
 class Author
 {
-    #[ORM\OneToMany(targetEntity: BookAuthor::class, mappedBy: 'author')]
-    private Collection $bookAuthors;
-
-    public function __construct()
-    {
-        $this->bookAuthors = new ArrayCollection();
-    }
-
-    /**
-     * @return Collection
-     */
-    public function getBookAuthors(): Collection
-    {
-        return $this->bookAuthors;
-    }
-
-    public function addBookAuthor(BookAuthor $bookAuthor): self
-    {
-        if (!$this->bookAuthors->contains($bookAuthor)) {
-            $this->bookAuthors[] = $bookAuthor;
-            $bookAuthor->setAuthor($this);
-        }
-
-        return $this;
-    }
-
-    public function removeBookAuthor(BookAuthor $bookAuthor): self
-    {
-        if ($this->bookAuthors->removeElement($bookAuthor)) {
-            // set the owning side to null (unless already changed)
-            if ($bookAuthor->getAuthor() === $this) {
-                $bookAuthor->setAuthor(null);
-            }
-        }
-
-        return $this;
-    }
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
-    private ?int $id = null;
+
+    private int $id;
 
     #[ORM\Column(length: 255)]
-    private ?string $firstName = null;
+    private string $firstName;
 
     #[ORM\Column(length: 255)]
-    private ?string $lastName = null;
+    private string $lastName;
 
-    #[ORM\Column(length: 255)]
-    private ?string $books = null;
+    #[ORM\ManyToMany(targetEntity: Book::class, mappedBy: "authors")]
+    private Collection $books;
 
-    public function getId(): ?int
+    public function __construct()
+    {
+        $this->books = new ArrayCollection();
+    }
+
+    public function getId(): int
     {
         return $this->id;
     }
 
-    public function setId(string $id): static
+    public function setId(string $id): self
     {
         $this->id = $id;
 
         return $this;
     }
 
-    public function getFirstName(): ?string
+    public function getFirstName(): string
     {
         return $this->firstName;
     }
 
-    public function setFirstName(string $firstName): static
+    public function setFirstName(string $firstName): self
     {
         $this->firstName = $firstName;
 
         return $this;
     }
 
-    public function getLastName(): ?string
+    public function getLastName(): string
     {
         return $this->lastName;
     }
 
-    public function setLastName(string $lastName): static
+    public function setLastName(string $lastName): self
     {
         $this->lastName = $lastName;
 
         return $this;
     }
 
-    public function getBooks(): ?string
-    {
+    /**
+     * @return Collection<Book>
+     */
+    public function getBooks(): Collection {
         return $this->books;
     }
 
-    public function setBooks(string $books): static
-    {
-        $this->books = $books;
-
-        return $this;
+    public function addBook(Book $book): void {
+        $this->books->add($book);
     }
+    public function removeBook(Book $book): void {
+        $this->books->removeElement($book);
+    }
+
+    #[ORM\PreRemove]
+    public function preRemove(): void {
+        /** @var Book $book */
+        foreach ($this->books as $book) {
+            $book->removeAuthor($this);
+        }
+        $this->books->clear();
+    }
+
 }

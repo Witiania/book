@@ -14,85 +14,84 @@ class Publisher
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
-    private ?int $id = null;
+    private int $id;
 
-    #[ORM\Column(length: 255)]
-    private ?string $name = null;
+    #[ORM\Column(type: "string")]
+    private string $name;
 
-    #[ORM\Column(length: 255)]
-    private ?string $address = null;
+    #[ORM\Column(type: "string")]
+    private ?string $address;
 
-    #[ORM\OneToMany(targetEntity: Book::class, mappedBy: 'publisher')]
+    #[ORM\OneToMany(targetEntity: Book::class, mappedBy: "publisher")]
     private Collection $books;
 
-    public function __construct()
-    {
+    public function __construct() {
         $this->books = new ArrayCollection();
     }
 
     /**
-     * @return Collection
+     * @return int
      */
-    public function getBooks(): Collection
-    {
-        return $this->books;
-    }
-
-    public function addBook(Book $book): self
-    {
-        if (!$this->books->contains($book)) {
-            $this->books[] = $book;
-            $book->setPublisher($this);
-        }
-
-        return $this;
-    }
-
-    public function removeBook(Book $book): self
-    {
-        if ($this->books->removeElement($book)) {
-            if ($book->getPublisher() === $this) {
-                $book->setPublisher(null);
-            }
-        }
-
-        return $this;
-    }
-
-    public function getId(): ?int
-    {
+    public function getId(): int {
         return $this->id;
     }
 
-    public function setId(string $id): static
-    {
+    /**
+     * @param int $id
+     */
+    public function setId(int $id): void {
         $this->id = $id;
-
-        return $this;
     }
 
-    public function getName(): ?string
-    {
+    /**
+     * @return string
+     */
+    public function getName(): string {
         return $this->name;
     }
 
-    public function setName(string $name): static
-    {
+    /**
+     * @param string $name
+     */
+    public function setName(string $name): void {
         $this->name = $name;
-
-        return $this;
     }
 
-    public function getAddress(): ?string
-    {
+    /**
+     * @return string
+     */
+    public function getAddress(): string {
         return $this->address;
     }
 
-    public function setAddress(string $address): static
-    {
+    /**
+     * @param string $address
+     */
+    public function setAddress(string $address): void {
         $this->address = $address;
-
-        return $this;
     }
 
+    /**
+     * @return Collection<Book>
+     */
+    public function getBooks(): Collection {
+        return $this->books;
+    }
+
+    public function addBook(Book $book): void {
+        $this->books->add($book);
+    }
+
+    public function removeBook(Book $book): void {
+        $this->books->removeElement($book);
+    }
+
+    #[ORM\PreRemove]
+    public function preRemove(): void {
+        /** @var Book $book */
+        foreach ($this->books as $book) {
+            $book->setPublisher(null);
+        }
+        $this->books->clear();
+    }
 }
