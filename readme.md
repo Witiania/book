@@ -1,5 +1,5 @@
 1. Для корректной работы нужно подключить docker контейнер с БД MySql: docker compose up -d --build
-2. Делаем миграции: doctrine:migrations:migrate
+2. Делаем миграции: bin/console doctrine:migrations:migrate
 3. Заполняем БД тестовыми данными: bin/console doctrine:fixtures:load
 4. Запускаем сервер: symfony serve
 5. Создание нового автора: /api/author ['POST'] {string firstName, string lastName}
