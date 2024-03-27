@@ -3,14 +3,12 @@
 namespace App\Repository;
 
 use App\Entity\Author;
-use Doctrine\ORM\EntityManagerInterface;
-use Doctrine\ORM\EntityRepository;
-use Doctrine\ORM\Mapping\ClassMetadata;
-use Symfony\Bridge\Doctrine\ManagerRegistry;
+use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
+use Doctrine\Persistence\ManagerRegistry;
 
-class AuthorRepository extends EntityRepository {
-    public function __construct(ManagerRegistry $em) {
-        parent::__construct($em, new ClassMetadata(Author::class));
+class AuthorRepository extends ServiceEntityRepository {
+    public function __construct(ManagerRegistry $registry) {
+        parent::__construct($registry, Author::class);
     }
 
     public function save(Author $author): void

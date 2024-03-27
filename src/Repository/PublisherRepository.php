@@ -5,10 +5,7 @@ namespace App\Repository;
 use App\Entity\Publisher;
 
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
-use Doctrine\ORM\EntityManagerInterface;
-use Doctrine\ORM\EntityRepository;
-use Doctrine\ORM\Mapping\ClassMetadata;
-use Symfony\Bridge\Doctrine\ManagerRegistry;
+use Doctrine\Persistence\ManagerRegistry;
 
 class PublisherRepository extends ServiceEntityRepository {
     public function __construct(ManagerRegistry $registry) {
